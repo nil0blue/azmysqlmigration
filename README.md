@@ -1,1 +1,2 @@
-# azmysqlmigration
+# MySQL database migration to Azure MySQL
+Content coming soon...
