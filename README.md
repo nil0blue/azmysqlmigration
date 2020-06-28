@@ -3,6 +3,8 @@
 The pdf details a sample migration of an existing AWS MySQL RDS instance to Azure MySQL database using the Azure Database Migration Service and Online Migration.
 
 Key Takeaways
+
+
 1 Foreign keys will need to be dropped and re-added on the target database. 
 
 2 If you're migrating over the public internet, the public IP address of the Azure database migration service will need to be discovered and added to Target database firewall and source database security group. 
