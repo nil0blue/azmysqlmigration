@@ -9,7 +9,7 @@ Key Takeaways
 
 2 If you're migrating over the public internet, the public IP address of the Azure database migration service will need to be discovered and added to Target database firewall and source database security group. 
 
-3 Server parameters me need to change on the source database, requiring a reboot and maintenance window on your source database. 
+3 Server parameters may need to be modified on the source database, requiring a reboot and maintenance window on your source database. 
 
 4 MyISAM tables are not supported. 
 
