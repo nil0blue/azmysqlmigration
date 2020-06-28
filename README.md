@@ -7,7 +7,7 @@ Key Takeaways
 
 1 Foreign keys and Triggers will need to be dropped/disabled and re-added on the target database. 
 
-2 If you're migrating over the public internet, the public IP address of the Azure database migration service will need to be discovered and added to Target database firewall and source database security group. 
+2 If you're migrating over the public internet, you'll need to create a static public IP and associate it with the NIC generated when the DMS is deployed. Then allow access from this public IP to your source and target database security group/firewall rules.  
 
 3 Server parameters may need to be modified on the source database, requiring a reboot and maintenance window on your source database. 
 
