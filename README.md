@@ -5,7 +5,7 @@ The pdf details a sample migration of an existing AWS MySQL RDS instance to Azur
 Key Takeaways
 
 
-1 Foreign keys will need to be dropped and re-added on the target database. 
+1 Foreign keys and Triggers will need to be dropped/disabled and re-added on the target database. 
 
 2 If you're migrating over the public internet, the public IP address of the Azure database migration service will need to be discovered and added to Target database firewall and source database security group. 
 
