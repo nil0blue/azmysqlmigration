@@ -7,7 +7,7 @@ Key Takeaways
 
 1 Foreign keys and Triggers will need to be dropped/disabled and re-added on the target database. 
 
-2 If you're migrating over the public internet, the public IP address of the Azure database migration service will need to be discovered and added to Target database firewall and source database security group. 
+2 If you're migrating over the public internet, you'll need to create a static public IP and associate it with the NIC generated when the DMS is deployed. Then allow access from this public IP to your source and target database security group/firewall rules.  
 
 3 Server parameters may need to be modified on the source database, requiring a reboot and maintenance window on your source database. 
 
@@ -18,3 +18,4 @@ Key Takeaways
 6 Application downtime is minimized to the cutover period (and possibley reboot as mentioned in 3)
 
 
+[![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fnil0blue%2Fazmysqlmigration%2Fmaster%2Fazuredeploy.json)  [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fnil0blue%2Fazmysqlmigration%2Fmaster%2Fazuredeploy.json)
