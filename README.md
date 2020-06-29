@@ -17,5 +17,6 @@ Key Takeaways
 
 6 Application downtime is minimized to the cutover period (and possibley reboot as mentioned in 3)
 
+The template below is a quickstart to deploy the Azure DMS service with source and target types configured as MySQL. It will also create a Target MySQL database in Azure. Loading the DB Schema and starting the Migration Activity has not been automated yet.
 
 [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fnil0blue%2Fazmysqlmigration%2Fmaster%2Fazuredeploy.json)  [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fnil0blue%2Fazmysqlmigration%2Fmaster%2Fazuredeploy.json)
