@@ -1,0 +1,250 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "defaultValue": "[resourceGroup().location]",
+            "type": "String",
+            "metadata": {
+                "description": "Location where the resources will be deployed."
+            }
+        },
+        "createPublicIP": {
+            "defaultValue": true,
+            "type": "Bool",
+            "metadata": {
+                "description": "Do you want to create a public IP address for the source server?"
+            }
+        },
+        "databaseName": {
+            "defaultValue": "NBDB",
+            "type": "String",
+            "metadata": {
+                "description": "AWS MySQL DB Name to be migrated, Target DB name used will be the same"
+            }
+        },
+        "sourceAWSAdminUserName": {
+            "defaultValue": "admin",
+            "type": "String",
+            "metadata": {
+                "description": "Authentication user name for the source server"
+            }
+        },
+        "dbserverName": {
+            "defaultValue": "nbazdb2",
+            "type": "String",
+            "metadata": {
+                "description": "Azure MySQL DB Server."
+            }
+        },
+        "targetMySqlDbAdministratorLogin": {
+            "defaultValue": "nbazdb_user",
+            "type": "String",
+            "metadata": {
+                "description": "Administrator User name for the Target Azure MySQL DB Server."
+            }
+        },
+        "targetMySqlDbAdministratorPassword": {
+         		"type": "securestring",
+         		"metadata": {
+             		"description": "The value of the Target Azure MySQL DB Server password."
+         		}
+     		
+        },
+		"dbAccessClientIp": {
+			"defaultValue": "45.17.125.130",
+            "type": "String",
+            "metadata": {
+                "description": "Client IP that you want to allow in the Target Azure MySQL DB Server"
+            }
+		}
+    },
+    "variables": {
+        "DMSServiceName": "[concat('DMS', uniqueString(resourceGroup().id))]",
+        "sourceServerName": "[take(concat('Source', uniqueString(resourceGroup().id)), 15)]",
+        "targetServerName": "[concat('targetservername', uniqueString(resourceGroup().id))]",
+        "storageAccountNamePrefix": "storage",
+        "storageAccountName": "[toLower(concat(variables('storageAccountNamePrefix'), uniqueString(resourceGroup().id)))]",
+        "sourceNicName": "SourceNIC-1",
+        "publicIPSourceServer": "SourceServer1-ip",
+        "sourceServerNSG": "SourceServer1-nsg",
+        "adVNet": "AzureDataMigrationServiceTemplateRG-vnet",
+        "defaultSubnetName": "default",
+        "databaseName": "TargetDatabaseName1",
+        "publicIpAddressId": {
+            "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPSourceServer'))]"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.DataMigration/services",
+            "apiVersion": "2018-04-19",
+            "name": "[variables('DMSServiceName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('adVNet'), variables('defaultSubnetName'))]"
+            ],
+            "sku": {
+                "name": "Premium_4vCores",
+                "tier": "Premium",
+                "size": "4 vCores"
+            },
+            "properties": {
+                "virtualSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('adVNet'), variables('defaultSubnetName'))]"
+            },
+            "resources": [
+                {
+                    "type": "projects",
+                    "apiVersion": "2018-04-19",
+                    "name": "AWSMySQLToAzureMySQLDbMigrationProject",
+                    "location": "[parameters('location')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.DataMigration/services', variables('DMSServiceName'))]"
+                    ],
+                    "properties": {
+                        "sourcePlatform": "MySQLRDS",
+                        "targetPlatform": "AzureDbForMySQL",
+                        "sourceConnectionInfo": {
+                            "userName": "[parameters('sourceAWSAdminUserName')]",
+                            "type": "MySqlConnectionInfo"
+                        },
+                        "targetConnectionInfo": {
+                            "userName": "[parameters('targetMySqlDbAdministratorLogin')]",
+                            "type": "MySqlConnectionInfo"
+                        },
+                        "databasesInfo": [
+                            {
+                                "sourceDatabaseName": "[parameters('databaseName')]"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2018-02-01",
+            "name": "[variables('adVNet')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.2.0.0/24"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "default",
+                        "properties": {
+                            "addressPrefix": "10.2.0.0/24"
+                        }
+                    }
+                ],
+                "enableDdosProtection": false,
+                "enableVmProtection": false
+            },
+            "resources": [
+                {
+                    "type": "subnets",
+                    "apiVersion": "2018-02-01",
+                    "name": "[variables('defaultSubnetName')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Network/virtualNetworks', variables('adVNet'))]"
+                    ],
+                    "properties": {
+                        "addressPrefix": "10.2.0.0/24"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.DBforMySQL/servers",
+            "apiVersion": "2017-12-01",
+            "name": "[parameters('dbserverName')]",
+            "location": "centralus",
+            "sku": {
+                "name": "B_Gen5_2",
+                "tier": "Basic",
+                "family": "Gen5",
+                "capacity": 2
+            },
+            "properties": {
+				"createMode": "Default",
+				"administratorLogin": "[parameters('targetMySqlDbAdministratorLogin')]",
+				"administratorLoginPassword": "[parameters('targetMySqlDbAdministratorPassword')]",
+                "storageProfile": {
+                    "storageMB": 51200,
+                    "backupRetentionDays": 7,
+                    "geoRedundantBackup": "Disabled",
+                    "storageAutogrow": "Enabled"
+                },
+                "version": "5.7",
+                "sslEnforcement": "Disabled",
+                "minimalTlsVersion": "TLSEnforcementDisabled",
+                "infrastructureEncryption": "Disabled",
+                "publicNetworkAccess": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.DBforMySQL/servers/configurations",
+            "apiVersion": "2017-12-01",
+            "name": "[concat(parameters('dbserverName'), '/log_bin_trust_function_creators')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DBforMySQL/servers', parameters('dbserverName'))]"
+            ],
+            "properties": {
+                "value": "ON",
+                "source": "user-override"
+            }
+        },
+        {
+            "type": "Microsoft.DBforMySQL/servers/databases",
+            "apiVersion": "2017-12-01",
+            "name": "[concat(parameters('dbserverName'), '/', parameters('databaseName'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DBforMySQL/servers', parameters('dbserverName'))]"
+            ],
+            "properties": {
+                "charset": "latin1",
+                "collation": "latin1_swedish_ci"
+            }
+        },
+        {
+            "type": "Microsoft.DBforMySQL/servers/databases",
+            "apiVersion": "2017-12-01",
+            "name": "[concat(parameters('dbserverName'), '/performance_schema')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DBforMySQL/servers', parameters('dbserverName'))]"
+            ],
+            "properties": {
+                "charset": "utf8",
+                "collation": "utf8_general_ci"
+            }
+        },
+		{
+            "type": "Microsoft.DBforMySQL/servers/firewallRules",
+            "apiVersion": "2017-12-01",
+            "name": "[concat(parameters('dbserverName'), '/AllowAllWindowsAzureIps')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DBforMySQL/servers', parameters('dbserverName'))]"
+            ],
+            "properties": {
+                "startIpAddress": "0.0.0.0",
+                "endIpAddress": "0.0.0.0"
+            }
+        },
+        {
+            "type": "Microsoft.DBforMySQL/servers/firewallRules",
+            "apiVersion": "2017-12-01",
+            "name": "[concat(parameters('dbserverName'), '/ClientIPAddress')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DBforMySQL/servers', parameters('dbserverName'))]"
+            ],
+            "properties": {
+                "startIpAddress": "[parameters('dbAccessClientIp')]",
+                "endIpAddress": "[parameters('dbAccessClientIp')]"
+            }
+        }
+		
+    ]
+}
